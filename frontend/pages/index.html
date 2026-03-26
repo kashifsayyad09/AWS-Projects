@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Problem Solving Platform - Share & Solve Issues</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">💡 Problem Solver</a>
+            <ul class="navbar-menu">
+                <li><a href="/">Home</a></li>
+                <li><button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button></li>
+                <span id="auth-links"></span>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="container">
+        <div class="hero">
+            <h1>Welcome to Problem Solving Platform</h1>
+            <p>Share your problems, discover solutions, and help others overcome challenges</p>
+        </div>
+
+        <!-- Search Box -->
+        <div class="search-container">
+            <div class="search-box">
+                <input
+                    type="text"
+                    id="search-input"
+                    class="search-input"
+                    placeholder="Search for problems, solutions, or topics..."
+                >
+                <button id="search-btn" class="btn-primary">🔍 Search</button>
+            </div>
+        </div>
+
+        <!-- Categories Section -->
+        <section class="categories-section">
+            <h2 class="section-title">Browse by Category</h2>
+            <div id="categories-container" class="categories-grid">
+                <div class="loading">Loading categories...</div>
+            </div>
+        </section>
+
+        <!-- Recent Problems Section -->
+        <section class="categories-section">
+            <h2 class="section-title">Recent Problems & Solutions</h2>
+            <div id="problems-container" class="problems-grid">
+                <div class="loading">Loading problems...</div>
+            </div>
+        </section>
+    </div>
+
+    <script src="/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load categories
+            await renderCategories('categories-container');
+
+            // Load recent problems
+            await renderProblems('problems-container', { limit: 10 });
+        });
+    </script>
+</body>
+</html>

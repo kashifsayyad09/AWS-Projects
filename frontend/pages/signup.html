@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Problem Solving Platform</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">💡 Problem Solver</a>
+            <ul class="navbar-menu">
+                <li><a href="/">Home</a></li>
+                <li><button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="form-container">
+            <h2 class="text-center mb-3">Create Your Account</h2>
+
+            <form id="signup-form">
+                <div class="form-group">
+                    <label for="full_name" class="form-label">Full Name</label>
+                    <input
+                        type="text"
+                        id="full_name"
+                        name="full_name"
+                        class="form-input"
+                        placeholder="Enter your full name"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="username" class="form-label">Username</label>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        class="form-input"
+                        placeholder="Choose a username"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        class="form-input"
+                        placeholder="Enter your email"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        class="form-input"
+                        placeholder="Create a password (min 8 characters)"
+                        required
+                    >
+                </div>
+
+                <div id="error-message" class="form-error" style="display: none;"></div>
+
+                <button type="submit" class="btn-primary" style="width: 100%;">Sign Up</button>
+            </form>
+
+            <p class="text-center mt-2">
+                Already have an account? <a href="/login" style="color: var(--primary-color);">Login</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="/js/main.js"></script>
+    <script>
+        // Redirect if already logged in
+        if (isAuthenticated()) {
+            window.location.href = '/';
+        }
+
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = {
+                full_name: document.getElementById('full_name').value,
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            };
+
+            hideError('error-message');
+
+            try {
+                const response = await apiCall('/auth/register', {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+
+                // Save token and user info
+                setToken(response.data.token);
+                setUser(response.data);
+
+                // Redirect to home
+                window.location.href = '/';
+            } catch (error) {
+                showError('error-message', error.message || 'Registration failed. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>

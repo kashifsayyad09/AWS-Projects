@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Problem - Problem Solving Platform</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">💡 Problem Solver</a>
+            <ul class="navbar-menu">
+                <li><a href="/">Home</a></li>
+                <li><button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button></li>
+                <span id="auth-links"></span>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="form-container" style="max-width: 800px;">
+            <h2 class="text-center mb-3">Share Your Problem & Solution</h2>
+            <p class="text-center mb-3" style="color: var(--text-secondary);">
+                Help others by sharing the problems you've solved
+            </p>
+
+            <form id="submit-form">
+                <div class="form-group">
+                    <label for="category" class="form-label">Category *</label>
+                    <select id="category" name="category" class="form-select" required>
+                        <option value="">Select a category...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="title" class="form-label">Problem Title *</label>
+                    <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        class="form-input"
+                        placeholder="Brief description of the problem"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="description" class="form-label">Problem Description *</label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        class="form-textarea"
+                        placeholder="Describe the problem in detail..."
+                        rows="6"
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="solution" class="form-label">Your Solution *</label>
+                    <textarea
+                        id="solution"
+                        name="solution"
+                        class="form-textarea"
+                        placeholder="Explain how you solved this problem..."
+                        rows="8"
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="tags" class="form-label">Tags (Optional)</label>
+                    <input
+                        type="text"
+                        id="tags"
+                        name="tags"
+                        class="form-input"
+                        placeholder="e.g., docker, kubernetes, api, authentication"
+                    >
+                    <small style="color: var(--text-secondary);">Separate tags with commas</small>
+                </div>
+
+                <div id="error-message" class="form-error" style="display: none;"></div>
+                <div id="success-message" class="form-success" style="display: none;"></div>
+
+                <button type="submit" class="btn-primary" style="width: 100%;">Submit Problem</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/main.js"></script>
+    <script>
+        // Check authentication
+        if (!isAuthenticated()) {
+            window.location.href = '/login';
+        }
+
+        // Load categories
+        document.addEventListener('DOMContentLoaded', async () => {
+            const categories = await loadCategories();
+            const categorySelect = document.getElementById('category');
+
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.name;
+                categorySelect.appendChild(option);
+            });
+        });
+
+        // Handle form submission
+        document.getElementById('submit-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = {
+                category_id: document.getElementById('category').value,
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                solution: document.getElementById('solution').value,
+                tags: document.getElementById('tags').value
+            };
+
+            hideError('error-message');
+            hideError('success-message');
+
+            try {
+                const response = await apiCall('/problems', {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+
+                showSuccess('success-message', 'Problem submitted successfully! It will be reviewed by admin.');
+
+                // Reset form
+                document.getElementById('submit-form').reset();
+
+                // Redirect after 2 seconds
+                setTimeout(() => {
+                    window.location.href = '/my-problems';
+                }, 2000);
+            } catch (error) {
+                showError('error-message', error.message || 'Submission failed. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>

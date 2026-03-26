@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Problem Details - Problem Solving Platform</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">💡 Problem Solver</a>
+            <ul class="navbar-menu">
+                <li><a href="/">Home</a></li>
+                <li><button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button></li>
+                <span id="auth-links"></span>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="problem-detail" class="loading">Loading problem details...</div>
+
+        <!-- Comments Section -->
+        <div id="comments-section" style="display: none;">
+            <h3 class="section-title mt-3">Comments</h3>
+
+            <div id="comment-form" style="display: none; margin-bottom: 2rem;">
+                <div class="form-container" style="max-width: 100%;">
+                    <textarea
+                        id="comment-text"
+                        class="form-textarea"
+                        placeholder="Add your comment..."
+                        rows="4"
+                    ></textarea>
+                    <button onclick="submitComment()" class="btn-primary mt-1">Post Comment</button>
+                </div>
+            </div>
+
+            <div id="comments-list"></div>
+        </div>
+    </div>
+
+    <script src="/js/main.js"></script>
+    <script>
+        const problemId = window.location.pathname.split('/').pop();
+
+        async function loadProblemDetail() {
+            try {
+                const response = await apiCall(`/problems/${problemId}`);
+                const { problem, comments } = response.data;
+
+                document.title = problem.title + ' - Problem Solving Platform';
+
+                const container = document.getElementById('problem-detail');
+                container.innerHTML = `
+                    <div class="problem-card" style="margin-bottom: 2rem;">
+                        <div class="badge badge-primary mb-2">
+                            <a href="/category/${problem.category_slug}" style="color: white; text-decoration: none;">
+                                ${problem.category_name}
+                            </a>
+                        </div>
+                        <h1 style="margin-bottom: 1rem;">${problem.title}</h1>
+
+                        <div class="problem-meta mb-2">
+                            <span>👤 ${problem.full_name} (@${problem.username})</span>
+                            <span>📅 ${new Date(problem.created_at).toLocaleDateString()}</span>
+                            <span>👁️ ${problem.views} views</span>
+                            <span>❤️ ${problem.likes} likes</span>
+                        </div>
+
+                        ${problem.tags ? `<div class="mb-2" style="color: var(--text-secondary);">Tags: ${problem.tags}</div>` : ''}
+
+                        <hr style="border: none; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
+
+                        <h3 style="margin-bottom: 1rem;">Problem Description</h3>
+                        <p style="white-space: pre-wrap; line-height: 1.8;">${problem.description}</p>
+
+                        <hr style="border: none; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
+
+                        <h3 style="margin-bottom: 1rem;">Solution</h3>
+                        <p style="white-space: pre-wrap; line-height: 1.8; background: var(--bg-color); padding: 1rem; border-radius: 0.5rem;">${problem.solution}</p>
+
+                        ${isAuthenticated() ? `
+                            <div style="margin-top: 1.5rem;">
+                                <button onclick="toggleLike()" id="like-btn" class="btn-secondary">
+                                    ❤️ Like
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+                // Show comments section
+                document.getElementById('comments-section').style.display = 'block';
+
+                // Show comment form if authenticated
+                if (isAuthenticated()) {
+                    document.getElementById('comment-form').style.display = 'block';
+                }
+
+                // Render comments
+                renderComments(comments);
+
+            } catch (error) {
+                document.getElementById('problem-detail').innerHTML = `
+                    <div class="text-center" style="padding: 3rem;">
+                        <h2>Problem not found</h2>
+                        <p style="color: var(--text-secondary); margin: 1rem 0;">
+                            The problem you're looking for doesn't exist or has been removed.
+                        </p>
+                        <a href="/" class="btn-primary">Go to Home</a>
+                    </div>
+                `;
+            }
+        }
+
+        function renderComments(comments) {
+            const commentsList = document.getElementById('comments-list');
+
+            if (comments.length === 0) {
+                commentsList.innerHTML = '<p style="color: var(--text-secondary);">No comments yet. Be the first to comment!</p>';
+                return;
+            }
+
+            commentsList.innerHTML = comments.map(comment => `
+                <div class="problem-card mb-2">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                        <strong>${comment.full_name} (@${comment.username})</strong>
+                        <small style="color: var(--text-secondary);">${new Date(comment.created_at).toLocaleDateString()}</small>
+                    </div>
+                    <p style="white-space: pre-wrap;">${comment.content}</p>
+                </div>
+            `).join('');
+        }
+
+        async function toggleLike() {
+            if (!isAuthenticated()) {
+                window.location.href = '/login';
+                return;
+            }
+
+            try {
+                await apiCall(`/problems/${problemId}/like`, { method: 'POST' });
+                location.reload();
+            } catch (error) {
+                alert('Failed to like problem');
+            }
+        }
+
+        async function submitComment() {
+            const commentText = document.getElementById('comment-text').value.trim();
+
+            if (!commentText) {
+                alert('Please enter a comment');
+                return;
+            }
+
+            try {
+                await apiCall(`/problems/${problemId}/comment`, {
+                    method: 'POST',
+                    body: JSON.stringify({ content: commentText })
+                });
+
+                document.getElementById('comment-text').value = '';
+                location.reload();
+            } catch (error) {
+                alert('Failed to post comment');
+            }
+        }
+
+        window.toggleLike = toggleLike;
+        window.submitComment = submitComment;
+
+        document.addEventListener('DOMContentLoaded', loadProblemDetail);
+    </script>
+</body>
+</html>
